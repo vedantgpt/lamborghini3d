@@ -90,6 +90,7 @@ def generate_clip(c, gcs, prompt: str, out_mp4: Path, first_uri: str, last_uri: 
     cfg_kw = dict(
         aspect_ratio=ASPECT,
         duration_seconds=DURATION,
+        resolution="1080p",
         generate_audio=False,
         negative_prompt=NEGATIVE,
         seed=seed,
@@ -98,11 +99,13 @@ def generate_clip(c, gcs, prompt: str, out_mp4: Path, first_uri: str, last_uri: 
         person_generation="dont_allow",
     )
     if last_uri:
-        cfg_kw["last_frame"] = types.Image(gcs_uri=last_uri)
+        cfg_kw["last_frame"] = types.Image(gcs_uri=last_uri, mime_type="image/png")
     op = c.models.generate_videos(
         model=VIDEO_MODEL,
-        prompt=prompt,
-        image=types.Image(gcs_uri=first_uri),
+        source=types.GenerateVideosSource(
+            prompt=prompt,
+            image=types.Image(gcs_uri=first_uri, mime_type="image/png"),
+        ),
         config=types.GenerateVideosConfig(**cfg_kw),
     )
     op = wait_op(c, op, label)
