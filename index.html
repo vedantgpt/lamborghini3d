@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>ALTAVIA — From raw ore to open road</title>
+  <meta name="description" content="Scroll to fly with ALTAVIA, an unbranded Italian V12 hypercar, from molten metal to the coastal road." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root, .sw-root {
+      --sw-bg: #1A1A1A;
+      --sw-ink: #E8E6E1;
+      --sw-ink-soft: #9a9892;
+      --sw-accent: #7BB026;
+      --sw-font-display: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+      --sw-font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    }
+    html, body { margin: 0; background: #1A1A1A; color: #E8E6E1; }
+    .sw-brand__name {
+      font-weight: 800;
+      letter-spacing: 0.28em;
+      font-size: 0.95rem;
+    }
+    .sw-copy__eyebrow { letter-spacing: 0.22em; }
+    .sw-copy__title {
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div id="top"></div>
+  <div id="world"></div>
+
+  <script src="scrub-engine.js"></script>
+  <script>
+    mountScrollWorld(document.getElementById('world'), {
+      brand: { name: 'ALTAVIA', href: '#top' },
+      cta: { label: 'Now go', href: '#road' },
+      hint: 'scroll to fly',
+      diveScroll: 1.45,
+      connScroll: 0.85,
+      crossfade: 0.14,
+      nav: true,
+      atmosphere: true,
+      sections: [
+        {
+          id: 'ore', label: 'Ore',
+          still: 'assets/ore.webp',
+          clip: 'assets/vid/ore.mp4',
+          accent: '#D94F00',
+          scroll: 1.5, linger: 0.38,
+          eyebrow: 'Ore',
+          title: 'It starts as nothing.',
+          body: 'Dark foundry air. A crucible tips. Molten metal finds the mould.',
+          tags: ['Foundry', 'Crucible', 'Billet'],
+        },
+        {
+          id: 'forge', label: 'Forge',
+          still: 'assets/forge.webp',
+          clip: 'assets/vid/forge.mp4',
+          accent: '#D94F00',
+          scroll: 1.45, linger: 0.36,
+          eyebrow: 'Forge',
+          title: 'Twelve tonnes of pressure. One line.',
+          body: 'A hydraulic press closes. The shoulder line is born in one strike.',
+          tags: ['Press', 'Carbon', 'Shoulder'],
+        },
+        {
+          id: 'assembly', label: 'Assembly',
+          still: 'assets/assembly.webp',
+          clip: 'assets/vid/assembly.mp4',
+          accent: '#7BB026',
+          scroll: 1.55, linger: 0.4,
+          eyebrow: 'Assembly',
+          title: 'V12. Naturally aspirated. Unapologetic.',
+          body: 'Chassis on a rotating jig. The engine drops. Panels find their home.',
+          tags: ['V12', 'Jig', 'Bay'],
+        },
+        {
+          id: 'reveal', label: 'Reveal',
+          still: 'assets/reveal.webp',
+          clip: 'assets/vid/reveal.mp4',
+          accent: '#7BB026',
+          scroll: 2.15, linger: 0.52,
+          eyebrow: 'Reveal',
+          title: 'ALTAVIA',
+          body: 'One hard key. Wet satin green. The Y-motif ignites.',
+          tags: ['Studio', 'Y-motif', 'Satin'],
+        },
+        {
+          id: 'rollout', label: 'Roll-out',
+          still: 'assets/rollout.webp',
+          clip: 'assets/vid/rollout.mp4',
+          accent: '#E8E6E1',
+          scroll: 1.45, linger: 0.36,
+          eyebrow: 'Roll-out',
+          title: 'Doors up. Lights on.',
+          body: 'A shutter lifts. Daylight cuts the tunnel. The car creeps forward.',
+          tags: ['Tunnel', 'Scissor', 'Disc'],
+        },
+        {
+          id: 'road', label: 'Road',
+          still: 'assets/road.webp',
+          clip: 'assets/vid/road.mp4',
+          accent: '#7BB026',
+          scroll: 1.7, linger: 0.42,
+          eyebrow: 'Road',
+          title: 'Now go.',
+          body: 'Golden hour. Heat shimmer off the exhaust. The coast road opens.',
+          tags: ['Coast', 'Golden hour', 'Aerial'],
+          cta: {
+            primary: { label: 'Fly again', href: '#top' },
+            secondary: { label: 'The car', href: '#reveal' },
+          },
+        },
+      ],
+      connectors: [
+        'assets/vid/conn1.mp4',
+        'assets/vid/conn2.mp4',
+        'assets/vid/conn3.mp4',
+        'assets/vid/conn4.mp4',
+        'assets/vid/conn5.mp4',
+      ],
+    });
+  </script>
+</body>
+</html>

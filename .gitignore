@@ -1,0 +1,9 @@
+.venv/
+work/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+*.log
+*.err
+pipeline/ffmpeg
