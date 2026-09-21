@@ -12,10 +12,10 @@ LOCATION = "us-central1"
 BUCKET = "railmantri-altavia-scroll"
 GCS_PREFIX = f"gs://{BUCKET}"
 
-STILL_MODEL = "gemini-3-pro-image-preview"
+STILL_MODEL = "gemini-2.5-flash-image"
 STILL_FALLBACKS = (
-    "gemini-3-pro-image",
-    "gemini-2.5-flash-image",
+    "imagen-4.0-generate-001",
+    "gemini-3-pro-image-preview",
 )
 VIDEO_MODEL = "veo-3.1-generate-001"
 DURATION = 6
@@ -69,9 +69,10 @@ SECTIONS = [
         "seed": 22002,
         "still": (
             "A vast stamping hall. A hydraulic press forms a sharp hexagonal body "
-            "panel in Verde Mantis green. Adjacent bay: carbon fibre weave being laid "
-            "by robotic arms. Raking hard light along the panel's shoulder line. "
-            "Cinematic photoreal, no people, centred composition."
+            "panel in Verde Mantis green — a single panel, not a finished car. "
+            "Adjacent bay: carbon fibre weave being laid by robotic arms. Raking hard "
+            "light along the panel's shoulder line. Blank unmarked surfaces, no emblem "
+            "on the nose. Cinematic photoreal, no people, centred composition."
         ),
         "dive": (
             "Single continuous cinematic camera move, no cuts. Pull off a glowing "
@@ -126,7 +127,8 @@ SECTIONS = [
             "A black photography studio. The finished unbranded Verde Mantis green "
             "satin V12 hypercar under a single hard key light, paint wet-looking, "
             "low wedge silhouette, sharp hexagonal surfacing, scissor doors closed, "
-            "Y-motif headlights just igniting. Deep shadow falloff, film grain, "
+            "Y-motif headlights just igniting. Completely blank nose — no emblem, no "
+            "badge, no crest. Empty cabin, no driver. Deep shadow falloff, film grain, "
             "slight halation. No badges, no text, centred hero three-quarter view."
         ),
         "dive": (
@@ -153,8 +155,9 @@ SECTIONS = [
         "still": (
             "A concrete tunnel. A shutter door lifting, hard daylight cutting in. "
             "The Verde Mantis green hypercar creeping forward, scissor door closing, "
-            "Y-motif lights on. Low-angle photoreal at wheel height, practical flare "
-            "from the daylight slit. No people, no plates, no badges."
+            "Y-motif lights on. Completely blank nose — no emblem, no badge. Empty "
+            "cabin, no driver, no plates. Low-angle photoreal at wheel height, "
+            "practical flare from the daylight slit."
         ),
         "dive": (
             "Single continuous cinematic camera move, no cuts. Drop from a glowing "
@@ -180,8 +183,9 @@ SECTIONS = [
         "still": (
             "A coastal mountain road at golden hour. The Verde Mantis green hypercar "
             "at speed, heat shimmer off the quad exhaust, anamorphic lens flare. "
-            "Wide establishing aerial of the road threading into the distance, car "
-            "centred. Cinematic photoreal, no people, no plates, no badges."
+            "Completely blank nose — no emblem, no badge. Dark empty cabin, no driver, "
+            "no plates. Wide establishing view of the road threading into the distance, "
+            "car centred. Cinematic photoreal."
         ),
         "dive": (
             "Single continuous cinematic camera move, no cuts. Pull out from a wheel "
