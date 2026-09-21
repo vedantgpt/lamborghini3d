@@ -17,7 +17,18 @@
       --sw-font-display: "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
       --sw-font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
     }
-    html, body { margin: 0; background: #1A1A1A; color: #E8E6E1; }
+    html, body, #world, .sw-root {
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      min-height: 100%;
+      min-height: 100dvh;
+      background: #1A1A1A;
+      color: #E8E6E1;
+      overflow-x: hidden;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     .sw-brand__name {
       font-weight: 800;
       letter-spacing: 0.28em;
@@ -44,6 +55,8 @@
       diveScroll: 1.45,
       connScroll: 0.85,
       crossfade: 0.14,
+      maxRate: 1,
+      coverScale: 1.32,
       nav: true,
       atmosphere: true,
       sections: [

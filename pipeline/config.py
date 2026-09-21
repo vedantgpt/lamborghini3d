@@ -89,28 +89,35 @@ SECTIONS = [
         "label": "Assembly",
         "eyebrow": "Assembly",
         "title": "V12. Naturally aspirated. Unapologetic.",
-        "body": "Chassis on a rotating jig. The engine drops. Panels find their home.",
-        "tags": ["V12", "Jig", "Bay"],
+        "body": "Marriage station. The engine drops. Robots close the skin.",
+        "tags": ["Line", "Marriage", "Robots"],
         "accent": "#7BB026",
-        "scroll": 1.55,
-        "linger": 0.4,
-        "seed": 33003,
+        "scroll": 1.85,
+        "linger": 0.42,
+        "seed": 33013,
         "still": (
-            "A bright, immaculate assembly hall. An unbranded Italian V12 hypercar "
-            "chassis on a rotating jig, naturally aspirated V12 being lowered in, "
-            "Verde Mantis green hexagonal panels floating into position around it. "
-            "Y-motif lighting signature unlit. Hard key, deep shadows, no people, "
-            "no badges, cinematic photoreal."
+            "A real advanced automotive final-assembly plant, lights-out, no people. "
+            "A long body-in-white line receding into depth: overhead gantry rails, "
+            "yellow cable trays, AGV skids, industrial LED bays. Mid-ground: the "
+            "powertrain marriage station — a naturally aspirated V12 is being lowered "
+            "by an overhead gantry crane into an unbranded hypercar chassis on a moving "
+            "skid. Nearby station: six-axis robots with suction cups fit Verde Mantis "
+            "green hexagonal body panels onto the car, not floating in air. Weld sparks "
+            "far up the BIW line. Hard factory key light, volumetric haze, photoreal, "
+            "blank unmarked nose, no badges, no logos, centred."
         ),
         "dive": (
-            "Single continuous cinematic camera move, no cuts. Rise over a bright "
-            "assembly hall, then swoop down and through the open engine bay of an "
-            "unbranded V12 hypercar on a rotating jig as panels float into place. "
-            "End in an extreme close-up of the V12 intake plenum. Smooth graceful "
-            "slow motion. In the final second, settle into a slow steady push toward "
-            "the intake plenum."
+            "Single continuous cinematic camera move, no cuts. Begin high and wide over "
+            "a real automotive assembly plant: a long moving line of chassis on AGV skids, "
+            "overhead gantries, robots welding and fitting panels. Track forward along "
+            "the line to the marriage station as a V12 is lowered by gantry into the "
+            "chassis, then push in through the open engine bay while a robot seats a "
+            "green body panel with suction cups. End in an extreme close-up of the V12 "
+            "intake plenum. Documentary factory realism, no people, no floating parts. "
+            "Smooth graceful slow motion. In the final second, settle into a slow "
+            "steady push toward the intake plenum."
         ),
-        "focal": "the V12 intake plenum",
+        "focal": "the V12 intake plenum on the marriage line",
     },
     {
         "id": "reveal",
@@ -221,8 +228,9 @@ CONNECTORS = [
         "prompt": (
             "Single continuous cinematic camera move, no cuts. Pull back from a "
             "stamped body-panel shoulder line, glide out of the press hall into a "
-            "bright assembly hall, and arrive above a chassis on a rotating jig. "
-            "Seamless flowing industrial transition, photoreal, no people, no text."
+            "real automotive assembly plant, and arrive on a wide high view of the "
+            "moving chassis line and marriage station. Seamless flowing industrial "
+            "transition, photoreal, no people, no text."
         ),
     },
     {
@@ -232,9 +240,10 @@ CONNECTORS = [
         "seed": 34034,
         "prompt": (
             "Single continuous cinematic camera move, no cuts. Pull back from a V12 "
-            "intake plenum, leave the assembly hall, and arrive in a black studio on "
-            "the finished Verde Mantis green hypercar under a single hard key. "
-            "Seamless flowing cinematic transition, photoreal, no people, no text."
+            "intake plenum on the marriage line, leave the assembly plant, and arrive "
+            "in a black studio on the finished Verde Mantis green hypercar under a "
+            "single hard key. Seamless flowing cinematic transition, photoreal, no "
+            "people, no text."
         ),
     },
     {
