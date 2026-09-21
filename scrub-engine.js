@@ -77,14 +77,11 @@ function mountScrollWorld(container, config) {
   const DIVE_W = config.diveScroll || 1.3;
   const CONN_W = config.connScroll || 0.9;
   const CROSSFADE = (config.crossfade != null) ? config.crossfade : 0.12;  // seam dissolve width (vh)
-  const MAX_RATE = (config.maxRate == null) ? 1 : config.maxRate;         // 1 = never faster than realtime
-  const COVER = (config.coverScale == null) ? 1.3 : config.coverScale;    // crop cinematic bars
   const N = SECTIONS.length;
   if (!N) return;
 
   injectCSS();
   container.classList.add('sw-root');
-  container.style.setProperty('--sw-cover', String(COVER));
 
   // ---- build the interleaved segment chain: dive0, conn0, dive1, … diveN-1 ----
   const SEGMENTS = [];
@@ -181,51 +178,22 @@ function mountScrollWorld(container, config) {
   const lingerEase = (x, L) => { L = clamp(L); const c = x - 0.5; return (1 - L) * x + L * (4 * c * c * c + 0.5); };
   let vh = window.innerHeight, stageX = 0, totalW = 0, activeIndex = -1, ticking = false;
   let laidOutW = window.innerWidth;
-  let playY = window.scrollY || 0;
-  let wantY = playY;
-  let lastTs = performance.now();
-  let driving = false;
-  let touchLast = null;
-
-  function maxScroll() { return Math.max(0, totalW * vh); }
-  function coverNow() {
-    const portrait = window.innerHeight > window.innerWidth;
-    return (isMobile() && portrait) ? COVER * 1.12 : COVER;
-  }
-  function yNow() {
-    return (MAX_RATE && !reduce) ? playY : (window.scrollY || window.pageYOffset);
-  }
-  function maxPxPerSec() {
-    const y = playY;
-    let seg = SEGMENTS[0];
-    for (let i = 0; i < NSEG; i++) if (y >= SEGMENTS[i].start) seg = SEGMENTS[i];
-    const dur = (seg.video && isFinite(seg.video.duration) && seg.video.duration > 0.4)
-      ? seg.video.duration : 6;
-    return Math.max(1, seg.end - seg.start) / dur * MAX_RATE;
-  }
 
   function layout() {
     vh = window.innerHeight;
     laidOutW = window.innerWidth;
-    stageX = 0;
-    container.style.setProperty('--sw-cover', String(coverNow()));
+    stageX = window.innerWidth > 860 ? 4 : 0;
     container.classList.toggle('is-compact', isMobile());
     let off = 0;
     SEGMENTS.forEach(s => { s.start = off * vh; off += s.w; s.end = off * vh; });
     totalW = off;
     track.style.height = (totalW * vh + vh) + 'px';
-    playY = wantY = clamp(yNow(), 0, maxScroll());
     read();
   }
 
   function jumpTo(i) {
     const seg = SECTIONS[i]._seg;
-    const y = seg.start + (seg.end - seg.start) * 0.5;
-    playY = wantY = y;
-    driving = true;
-    window.scrollTo(0, y);
-    driving = false;
-    read();
+    window.scrollTo({ top: seg.start + (seg.end - seg.start) * 0.5, behavior: reduce ? 'auto' : 'smooth' });
   }
 
   function loadClip(s) {
@@ -253,7 +221,7 @@ function mountScrollWorld(container, config) {
   }
 
   function read() {
-    const y = yNow();
+    const y = window.scrollY || window.pageYOffset;
     const fade = CROSSFADE * vh;
     let ci = 0;
     for (let i = 0; i < NSEG; i++) if (y >= SEGMENTS[i].start) ci = i;
@@ -269,8 +237,8 @@ function mountScrollWorld(container, config) {
       s.el.style.opacity = op; s.visible = op > 0.001;
       s.el.style.zIndex = (i === ci) ? '120' : String(100 + Math.round(op * 10));
       if (!s.hasClip || !s.ready) {
-        const sc = (reduce ? 1 : 1.02 + local * 0.08) * coverNow();
-        s.img.style.transform = `translate(-50%,-50%) scale(${sc.toFixed(3)})`;
+        const sc = reduce ? 1 : 1.03 + local * 0.14;
+        s.img.style.transform = `translateX(${stageX - 2}vw) scale(${sc.toFixed(3)})`;
       }
     }
 
@@ -304,28 +272,14 @@ function mountScrollWorld(container, config) {
     ticking = false;
   }
 
-  function raf(ts) {
-    if (MAX_RATE && !reduce) {
-      const dt = Math.min(0.048, Math.max(0, ((ts || performance.now()) - lastTs) / 1000));
-      lastTs = ts || performance.now();
-      const maxPx = maxPxPerSec() * dt;
-      const d = wantY - playY;
-      if (Math.abs(d) > 0.25) {
-        playY += Math.sign(d) * Math.min(Math.abs(d), maxPx);
-        driving = true;
-        window.scrollTo(0, playY);
-        driving = false;
-        read();
-      }
-    }
+  function raf() {
     const eps = isMobile() ? 0.02 : 0.008;
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
       if (!s.hasClip || !s.ready || !s.video) continue;
       if (s.video.seeking) continue;
       if (!s.visible && Math.abs(s.cur - s.target) < 0.002) continue;
-      if (MAX_RATE && !reduce) s.cur = s.target;
-      else s.cur += (s.target - s.cur) * (reduce ? 1 : 0.18);
+      s.cur += (s.target - s.cur) * (reduce ? 1 : 0.18);
       const dur = s.video.duration || 1;
       const t = clamp(s.cur, 0, 0.999) * dur;
       if (Math.abs(s.video.currentTime - t) > eps) { try { s.video.currentTime = t; } catch (e) {} }
@@ -349,43 +303,10 @@ function mountScrollWorld(container, config) {
     SEGMENTS.forEach(s => primeVideo(s.video));
   }
   window.addEventListener('pointerdown', onFirstGesture, { once: true, passive: true });
+  window.addEventListener('touchstart', onFirstGesture, { once: true, passive: true });
 
   seedParticles(particles, reduce || coarse);
-  window.addEventListener('wheel', (e) => {
-    if (!MAX_RATE || reduce) return;
-    e.preventDefault();
-    wantY = clamp(wantY + e.deltaY, 0, maxScroll());
-  }, { passive: false });
-  window.addEventListener('touchstart', (e) => {
-    onFirstGesture();
-    if (!MAX_RATE || reduce) return;
-    touchLast = e.touches[0].clientY;
-  }, { passive: true });
-  window.addEventListener('touchmove', (e) => {
-    if (!MAX_RATE || reduce || touchLast == null) return;
-    e.preventDefault();
-    wantY = clamp(wantY + (touchLast - e.touches[0].clientY), 0, maxScroll());
-    touchLast = e.touches[0].clientY;
-  }, { passive: false });
-  window.addEventListener('touchend', () => { touchLast = null; }, { passive: true });
-  window.addEventListener('keydown', (e) => {
-    if (!MAX_RATE || reduce) return;
-    const keys = { ArrowDown: 1, PageDown: 1, ' ': 1, ArrowUp: -1, PageUp: -1 };
-    if (!keys[e.key]) return;
-    if (e.key === ' ' && /^(A|BUTTON|INPUT|TEXTAREA)$/.test((e.target && e.target.tagName) || '')) return;
-    e.preventDefault();
-    const step = (e.key === 'PageDown' || e.key === 'PageUp' || e.key === ' ') ? vh * 0.85 : 72;
-    wantY = clamp(wantY + keys[e.key] * step, 0, maxScroll());
-  });
-  window.addEventListener('scroll', () => {
-    if (driving) return;
-    if (MAX_RATE && !reduce) {
-      const native = window.scrollY || 0;
-      if (Math.abs(native - playY) > 2) wantY = clamp(native, 0, maxScroll());
-      return;
-    }
-    if (!ticking) { ticking = true; requestAnimationFrame(read); }
-  }, { passive: true });
+  window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(read); } }, { passive: true });
   function onResize() {
     if (coarse && window.innerWidth === laidOutW) return;
     layout();
@@ -430,7 +351,7 @@ function injectCSS() {
   if (document.getElementById('sw-css')) return;
   const css = `
   .sw-root,.sw-root *{box-sizing:border-box;}
-  .sw-root{--sw-bg:#F5EDE0;--sw-ink:#241d2b;--sw-ink-soft:#6a6072;--sw-accent:#8a7bb5;--sw-cover:1.32;
+  .sw-root{--sw-bg:#F5EDE0;--sw-ink:#241d2b;--sw-ink-soft:#6a6072;--sw-accent:#8a7bb5;
     --sw-font-display:ui-rounded,"SF Pro Rounded","Segoe UI",system-ui,sans-serif;
     --sw-font-body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
     color:var(--sw-ink);font-family:var(--sw-font-body);width:100%;max-width:100%;}
@@ -458,8 +379,7 @@ function injectCSS() {
   .sw-topcta{text-decoration:none;font-weight:600;font-size:clamp(.78rem,1.4vw,.9rem);color:#fff;background:var(--sw-ink);padding:10px 18px;border-radius:999px;white-space:nowrap;flex:0 0 auto;}
   .sw-stage{position:fixed;inset:0;z-index:10;pointer-events:none;width:100vw;height:100%;height:100dvh;overflow:hidden;}
   .sw-scene{position:absolute;inset:0;opacity:0;overflow:hidden;will-change:opacity;}
-  .sw-scene__video,.sw-scene__still{position:absolute;left:50%;top:50%;width:100%;height:100%;min-width:100%;min-height:100%;
-    object-fit:cover;object-position:center center;transform:translate(-50%,-50%) scale(var(--sw-cover,1.32));transform-origin:center center;}
+  .sw-scene__video,.sw-scene__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;}
   .sw-scene__still{will-change:transform;} .sw-scene.has-clip .sw-scene__still{opacity:0;} .sw-scene__video{z-index:1;}
   .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
   .sw-copylayer::before{content:"";position:absolute;inset:0;width:min(52vw,720px);background:linear-gradient(90deg,var(--sw-bg) 0%,color-mix(in srgb,var(--sw-bg) 78%,transparent) 34%,color-mix(in srgb,var(--sw-bg) 28%,transparent) 62%,transparent 100%);}
