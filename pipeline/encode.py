@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Encode work/*.mp4 into seekable web clips (native res, GOP 8, no audio)."""
+"""Encode work/*.mp4 into frame-accurate scrub clips (all-intra, no B-frames)."""
 
 from __future__ import annotations
 
@@ -18,9 +18,11 @@ def enc(src: Path, dest: Path):
         [
             FFMPEG, "-v", "error", "-y", "-i", str(src),
             "-an", "-vf", "unsharp=5:5:0.8:5:5:0.0",
-            "-c:v", "libx264", "-preset", "slow", "-crf", "20",
-            "-pix_fmt", "yuv420p", "-g", "8", "-keyint_min", "8",
-            "-sc_threshold", "0", "-movflags", "+faststart", str(dest),
+            "-c:v", "libx264", "-preset", "fast", "-tune", "fastdecode",
+            "-crf", "20", "-pix_fmt", "yuv420p", "-profile:v", "high",
+            "-g", "1", "-keyint_min", "1", "-bf", "0", "-refs", "1",
+            "-sc_threshold", "0", "-x264-params", "keyint=1:min-keyint=1:scenecut=0:bframes=0:ref=1",
+            "-movflags", "+faststart", str(dest),
         ]
     )
     print(f"enc {dest} ({dest.stat().st_size // 1024} KB)")

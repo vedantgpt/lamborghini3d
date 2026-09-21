@@ -82,6 +82,7 @@ function mountScrollWorld(container, config) {
 
   injectCSS();
   container.classList.add('sw-root');
+  try { if (history.scrollRestoration) history.scrollRestoration = 'manual'; } catch (e) {}
 
   // ---- build the interleaved segment chain: dive0, conn0, dive1, … diveN-1 ----
   const SEGMENTS = [];
@@ -144,6 +145,7 @@ function mountScrollWorld(container, config) {
     scene.appendChild(img); stage.appendChild(scene);
     s.el = scene; s.img = img; s.video = null; s.hasClip = false;
     s.loading = false; s.ready = false; s.cur = 0; s.target = 0; s.visible = false;
+    s.fps = 24; s.wantT = 0;
   });
 
   // per-section copy / route / nav
@@ -209,14 +211,32 @@ function mountScrollWorld(container, config) {
         v.className = 'sw-scene__video';
         v.muted = true; v.playsInline = true; v.preload = 'auto';
         v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
-        v.src = URL.createObjectURL(blob);
-        v.addEventListener('loadedmetadata', () => { s.ready = true; read(); });
+        v.disablePictureInPicture = true;
+        if ('disableRemotePlayback' in v) v.disableRemotePlayback = true;
+        const markReady = () => {
+          if (s.ready) return;
+          const dur = v.duration;
+          if (dur > 0.2 && dur < 30) s.fps = Math.round(dur * 24) / dur;
+          s.ready = true;
+          try { v.pause(); } catch (e) {}
+          if (v.readyState >= 2) s.el.classList.add('has-clip');
+          primeVideo(v);
+          read();
+        };
+        v.addEventListener('loadedmetadata', () => {
+          const dur = v.duration;
+          if (dur > 0.2 && dur < 30) s.fps = Math.round(dur * 24) / dur;
+        });
         // Reveal the video (hide the still poster) only once a real frame has
         // painted — on iOS a seeked-but-never-played muted video stays blank, so
         // hiding the still on metadata alone would flash an empty scene.
         v.addEventListener('seeked', () => { s.el.classList.add('has-clip'); }, { once: true });
-        v.addEventListener('loadeddata', () => { try { v.pause(); } catch (e) {} if (userReady) primeVideo(v); });
+        v.addEventListener('seeked', () => flushSeek(s));
+        v.addEventListener('loadeddata', markReady);
+        v.addEventListener('canplay', markReady);
         s.el.appendChild(v); s.video = v; s.hasClip = true;
+        v.src = URL.createObjectURL(blob);
+        if (v.readyState >= 2) markReady();
       }).catch(() => { s.loading = false; });
   }
 
@@ -272,17 +292,42 @@ function mountScrollWorld(container, config) {
     ticking = false;
   }
 
+  function snapTime(s, t) {
+    const fps = s.fps || 24;
+    const dur = (s.video && s.video.duration) || 1;
+    const last = Math.max(0, Math.round(dur * fps) - 1);
+    return clamp(Math.round(t * fps), 0, last) / fps;
+  }
+  function issueSeek(s, t) {
+    const v = s.video;
+    if (!v || !s.ready || v.readyState < 2) return;
+    t = snapTime(s, t);
+    s.wantT = t;
+    if (v.seeking) return;
+    const step = 0.4 / (s.fps || 24);
+    if (Math.abs(v.currentTime - t) < step) return;
+    try { v.currentTime = t; } catch (e) {}
+  }
+  function flushSeek(s) {
+    const v = s.video;
+    if (!v || !s.ready || v.readyState < 2) return;
+    const t = s.wantT;
+    const step = 0.4 / (s.fps || 24);
+    if (Math.abs(v.currentTime - t) < step) return;
+    try { v.currentTime = t; } catch (e) {}
+  }
+
   function raf() {
-    const eps = isMobile() ? 0.02 : 0.008;
+    // Always lerp the playhead — even while a seek is in flight — then issue the
+    // latest frame as a single seek. Dropping either step is what skipped frames.
+    const catchup = reduce ? 1 : (isMobile() ? 0.32 : 0.5);
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
       if (!s.hasClip || !s.ready || !s.video) continue;
-      if (s.video.seeking) continue;
       if (!s.visible && Math.abs(s.cur - s.target) < 0.002) continue;
-      s.cur += (s.target - s.cur) * (reduce ? 1 : 0.18);
+      s.cur += (s.target - s.cur) * catchup;
       const dur = s.video.duration || 1;
-      const t = clamp(s.cur, 0, 0.999) * dur;
-      if (Math.abs(s.video.currentTime - t) > eps) { try { s.video.currentTime = t; } catch (e) {} }
+      issueSeek(s, clamp(s.cur, 0, 0.999) * dur);
     }
     requestAnimationFrame(raf);
   }
@@ -293,7 +338,7 @@ function mountScrollWorld(container, config) {
   // clips prime themselves (see loadClip).
   let userReady = false;
   function primeVideo(v) {
-    if (!isMobile() || !v) return;
+    if (!v) return;
     try { const p = v.play(); if (p && p.then) p.then(() => { try { v.pause(); } catch (e) {} }).catch(() => {}); }
     catch (e) {}
   }
@@ -380,7 +425,8 @@ function injectCSS() {
   .sw-stage{position:fixed;inset:0;z-index:10;pointer-events:none;width:100vw;height:100%;height:100dvh;overflow:hidden;}
   .sw-scene{position:absolute;inset:0;opacity:0;overflow:hidden;will-change:opacity;}
   .sw-scene__video,.sw-scene__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;}
-  .sw-scene__still{will-change:transform;} .sw-scene.has-clip .sw-scene__still{opacity:0;} .sw-scene__video{z-index:1;}
+  .sw-scene__still{will-change:transform;} .sw-scene.has-clip .sw-scene__still{opacity:0;}
+  .sw-scene__video{z-index:1;will-change:contents;transform:translateZ(0);}
   .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
   .sw-copylayer::before{content:"";position:absolute;inset:0;width:min(52vw,720px);background:linear-gradient(90deg,var(--sw-bg) 0%,color-mix(in srgb,var(--sw-bg) 78%,transparent) 34%,color-mix(in srgb,var(--sw-bg) 28%,transparent) 62%,transparent 100%);}
   .sw-copy{position:absolute;left:max(16px, env(safe-area-inset-left,0px) + clamp(14px,4vw,64px));top:50%;transform:translateY(-50%);

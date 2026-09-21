@@ -46,24 +46,24 @@
   <div id="top"></div>
   <div id="world"></div>
 
-  <script src="scrub-engine.js"></script>
+  <script src="scrub-engine.js?v=intra4"></script>
   <script>
     mountScrollWorld(document.getElementById('world'), {
       brand: { name: 'ALTAVIA', href: '#top' },
       cta: { label: 'Now go', href: '#road' },
       hint: 'scroll to fly',
-      diveScroll: 1.45,
-      connScroll: 0.85,
-      crossfade: 0.14,
+      diveScroll: 2.85,
+      connScroll: 1.6,
+      crossfade: 0.12,
       nav: true,
       atmosphere: true,
       sections: [
         {
           id: 'ore', label: 'Ore',
           still: 'assets/ore-poster.webp',
-          clip: 'assets/vid/ore.mp4',
+          clip: 'assets/vid/ore.mp4?v=intra',
           accent: '#D94F00',
-          scroll: 1.5, linger: 0.38,
+          scroll: 2.9, linger: 0,
           eyebrow: 'Ore',
           title: 'It starts as nothing.',
           body: 'Dark foundry air. A crucible tips. Molten metal finds the mould.',
@@ -72,9 +72,9 @@
         {
           id: 'forge', label: 'Forge',
           still: 'assets/forge-poster.webp',
-          clip: 'assets/vid/forge.mp4',
+          clip: 'assets/vid/forge.mp4?v=intra',
           accent: '#D94F00',
-          scroll: 1.45, linger: 0.36,
+          scroll: 2.8, linger: 0,
           eyebrow: 'Forge',
           title: 'Twelve tonnes of pressure. One line.',
           body: 'A hydraulic press closes. The shoulder line is born in one strike.',
@@ -83,9 +83,9 @@
         {
           id: 'assembly', label: 'Assembly',
           still: 'assets/assembly-poster.webp',
-          clip: 'assets/vid/assembly.mp4',
+          clip: 'assets/vid/assembly.mp4?v=intra',
           accent: '#7BB026',
-          scroll: 1.55, linger: 0.4,
+          scroll: 3.0, linger: 0,
           eyebrow: 'Assembly',
           title: 'V12. Naturally aspirated. Unapologetic.',
           body: 'Chassis on a rotating jig. The engine drops. Panels find their home.',
@@ -94,9 +94,9 @@
         {
           id: 'reveal', label: 'Reveal',
           still: 'assets/reveal-poster.webp',
-          clip: 'assets/vid/reveal.mp4',
+          clip: 'assets/vid/reveal.mp4?v=intra',
           accent: '#7BB026',
-          scroll: 2.15, linger: 0.52,
+          scroll: 3.6, linger: 0.12,
           eyebrow: 'Reveal',
           title: 'ALTAVIA',
           body: 'One hard key. Wet satin green. The Y-motif ignites.',
@@ -105,9 +105,9 @@
         {
           id: 'rollout', label: 'Roll-out',
           still: 'assets/rollout-poster.webp',
-          clip: 'assets/vid/rollout.mp4',
+          clip: 'assets/vid/rollout.mp4?v=intra',
           accent: '#E8E6E1',
-          scroll: 1.45, linger: 0.36,
+          scroll: 2.8, linger: 0,
           eyebrow: 'Roll-out',
           title: 'Doors up. Lights on.',
           body: 'A shutter lifts. Daylight cuts the tunnel. The car creeps forward.',
@@ -116,9 +116,9 @@
         {
           id: 'road', label: 'Road',
           still: 'assets/road-poster.webp',
-          clip: 'assets/vid/road.mp4',
+          clip: 'assets/vid/road.mp4?v=intra',
           accent: '#7BB026',
-          scroll: 1.7, linger: 0.42,
+          scroll: 3.2, linger: 0,
           eyebrow: 'Road',
           title: 'Now go.',
           body: 'Golden hour. Heat shimmer off the exhaust. The coast road opens.',
@@ -130,11 +130,11 @@
         },
       ],
       connectors: [
-        'assets/vid/conn1.mp4',
-        'assets/vid/conn2.mp4',
-        'assets/vid/conn3.mp4',
-        'assets/vid/conn4.mp4',
-        'assets/vid/conn5.mp4',
+        'assets/vid/conn1.mp4?v=intra',
+        'assets/vid/conn2.mp4?v=intra',
+        'assets/vid/conn3.mp4?v=intra',
+        'assets/vid/conn4.mp4?v=intra',
+        'assets/vid/conn5.mp4?v=intra',
       ],
     });
   </script>
