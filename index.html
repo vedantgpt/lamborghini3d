@@ -46,7 +46,7 @@
   <div id="top"></div>
   <div id="world"></div>
 
-  <script src="scrub-engine.js?v=intra4"></script>
+  <script src="scrub-engine.js?v=frames1"></script>
   <script>
     mountScrollWorld(document.getElementById('world'), {
       brand: { name: 'ALTAVIA', href: '#top' },
@@ -57,6 +57,7 @@
       crossfade: 0.12,
       nav: true,
       atmosphere: true,
+      frames: 'assets/frames/manifest.json',
       sections: [
         {
           id: 'ore', label: 'Ore',

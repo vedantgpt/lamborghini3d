@@ -1,0 +1,19 @@
+{
+  "dir": "assets/frames",
+  "ext": "webp",
+  "pad": 3,
+  "fps": 12,
+  "clips": {
+    "ore": 72,
+    "conn1": 72,
+    "forge": 72,
+    "conn2": 72,
+    "assembly": 72,
+    "conn3": 72,
+    "reveal": 72,
+    "conn4": 72,
+    "rollout": 72,
+    "conn5": 72,
+    "road": 72
+  }
+}

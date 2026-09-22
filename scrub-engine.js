@@ -27,6 +27,7 @@
        ],
        connectors: [clipUrl, …],          // length = sections.length - 1 (nulls allowed)
        connectorsMobile: [clipUrl, …],    // optional lighter connectors for phones (same length)
+       frames: 'assets/frames/manifest.json', // static frame sequences (deploy without video seek)
 
    MOBILE (the clipMobile/connectorsMobile variants are the opt-in mobile version;
    the rest of the phone handling below is always on)
@@ -142,11 +143,27 @@ function mountScrollWorld(container, config) {
     const img = el('img', 'sw-scene__still'); img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
     const poster = (isMobile() && s.stillM) ? s.stillM : s.still;
     if (poster) img.src = poster;
-    scene.appendChild(img); stage.appendChild(scene);
+    scene.appendChild(img);
+    if (config.frames) {
+      const canvas = el('canvas', 'sw-scene__canvas');
+      scene.appendChild(canvas);
+      s.frameMode = true;
+      s.canvas = canvas;
+      s.ctx = canvas.getContext('2d');
+      s.count = 0;
+      s.cache = new Map();
+      s.drawn = -1;
+      s.frameBase = '';
+      s.ext = 'webp';
+      s.pad = 3;
+    }
+    stage.appendChild(scene);
     s.el = scene; s.img = img; s.video = null; s.hasClip = false;
     s.loading = false; s.ready = false; s.cur = 0; s.target = 0; s.visible = false;
     s.fps = 24; s.wantT = 0;
   });
+
+  if (config.frames) loadFrameManifest(config.frames);
 
   // per-section copy / route / nav
   const copies = [], dots = [];
@@ -190,6 +207,7 @@ function mountScrollWorld(container, config) {
     SEGMENTS.forEach(s => { s.start = off * vh; off += s.w; s.end = off * vh; });
     totalW = off;
     track.style.height = (totalW * vh + vh) + 'px';
+    SEGMENTS.forEach(sizeCanvas);
     read();
   }
 
@@ -198,7 +216,113 @@ function mountScrollWorld(container, config) {
     window.scrollTo({ top: seg.start + (seg.end - seg.start) * 0.5, behavior: reduce ? 'auto' : 'smooth' });
   }
 
+  function clipKey(url) {
+    const path = String(url || '').split('?')[0].split('#')[0];
+    const base = path.split('/').pop() || '';
+    return base.replace(/\.[a-z0-9]+$/i, '');
+  }
+  function frameUrl(s, i) {
+    return s.frameBase + '/' + String(i).padStart(s.pad, '0') + '.' + s.ext;
+  }
+  function requestFrame(s, i) {
+    if (!s.count || i < 0 || i >= s.count) return null;
+    const hit = s.cache.get(i);
+    if (hit) return hit;
+    const im = new Image();
+    im.decoding = 'async';
+    im._i = i;
+    im.src = frameUrl(s, i);
+    s.cache.set(i, im);
+    im.addEventListener('load', () => {
+      if (s.want === i) s.drawn = -1;
+      s.el.classList.add('has-frames');
+    });
+    return im;
+  }
+  function pruneFrames(s, center) {
+    const lo = center - 8;
+    const hi = center + 24;
+    for (const k of s.cache.keys()) {
+      if (k !== 0 && k !== s.count - 1 && (k < lo || k > hi)) s.cache.delete(k);
+    }
+  }
+  function bestFrame(s, i) {
+    const ready = im => im && im.complete && im.naturalWidth;
+    const exact = s.cache.get(i);
+    if (ready(exact)) return exact;
+    for (let d = 1; d <= 10; d++) {
+      const prev = s.cache.get(i - d);
+      if (ready(prev)) return prev;
+      const next = s.cache.get(i + d);
+      if (ready(next)) return next;
+    }
+    const first = s.cache.get(0);
+    return ready(first) ? first : null;
+  }
+  function sizeCanvas(s) {
+    if (!s.canvas) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.max(1, Math.round((s.el.clientWidth || window.innerWidth) * dpr));
+    const h = Math.max(1, Math.round((s.el.clientHeight || window.innerHeight) * dpr));
+    if (s.canvas.width !== w || s.canvas.height !== h) {
+      s.canvas.width = w;
+      s.canvas.height = h;
+      s.drawn = -1;
+    }
+  }
+  function paintFrame(s, i) {
+    if (!s.canvas) return;
+    const img = bestFrame(s, i);
+    if (!img) return;
+    if (s.drawn === i && s.drawnSrc === img._i && s.drawnW === s.canvas.width) return;
+    const cw = s.canvas.width;
+    const ch = s.canvas.height;
+    if (!cw || !ch) return;
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+    const scale = Math.max(cw / iw, ch / ih);
+    const dw = iw * scale;
+    const dh = ih * scale;
+    const ox = (cw - dw) * 0.5;
+    const oy = (ch - dh) * (isMobile() ? 0.46 : 0.42);
+    s.ctx.drawImage(img, ox, oy, dw, dh);
+    s.drawn = i;
+    s.drawnSrc = img._i;
+    s.drawnW = cw;
+    s.el.classList.add('has-frames');
+  }
+  function scrubFrames(s) {
+    if (!s.count) return;
+    const idx = Math.round(clamp(s.cur, 0, 1) * (s.count - 1));
+    s.want = idx;
+    const dir = s.target >= s.cur ? 1 : -1;
+    for (let k = -2; k <= 16; k++) requestFrame(s, idx + dir * k);
+    requestFrame(s, 0);
+    requestFrame(s, s.count - 1);
+    pruneFrames(s, idx);
+    if (!s.canvas.width) sizeCanvas(s);
+    paintFrame(s, idx);
+  }
+  function loadFrameManifest(url) {
+    fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('frames'))).then(man => {
+      const dir = man.dir || 'assets/frames';
+      SEGMENTS.forEach(s => {
+        const key = clipKey(s.clip);
+        const n = (man.clips && man.clips[key]) || 0;
+        s.count = n;
+        s.ext = man.ext || 'webp';
+        s.pad = man.pad || 3;
+        s.frameBase = dir + '/' + key;
+        if (n) requestFrame(s, 0);
+      });
+      SEGMENTS.forEach(sizeCanvas);
+      read();
+    }).catch(() => {});
+  }
+
   function loadClip(s) {
+    // Frame sequences are static images — no video fetch, no seek.
+    if (s.frameMode) return;
     // Under prefers-reduced-motion we never load the clips at all — the stills stay up
     // and simply cross-dissolve as you scroll. No scrubbed video motion, no decode cost.
     if (reduce || s.loading || !s.clip) return;
@@ -248,7 +372,7 @@ function mountScrollWorld(container, config) {
 
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
-      if (y > s.start - 1.6 * vh && y < s.end + 1.6 * vh) loadClip(s);
+      if (!s.frameMode && y > s.start - 1.6 * vh && y < s.end + 1.6 * vh) loadClip(s);
       const local = clamp((y - s.start) / (s.end - s.start), 0, 1);
       s.target = s.linger ? lingerEase(local, s.linger) : local;
       let outside = 0;
@@ -256,9 +380,8 @@ function mountScrollWorld(container, config) {
       const op = smooth(1 - outside / fade);
       s.el.style.opacity = op; s.visible = op > 0.001;
       s.el.style.zIndex = (i === ci) ? '120' : String(100 + Math.round(op * 10));
-      if (!s.hasClip || !s.ready) {
-        const sc = reduce ? 1 : 1.03 + local * 0.14;
-        s.img.style.transform = `translateX(${stageX - 2}vw) scale(${sc.toFixed(3)})`;
+      if (!s.frameMode && (!s.hasClip || !s.ready)) {
+        s.img.style.transform = 'none';
       }
     }
 
@@ -323,6 +446,13 @@ function mountScrollWorld(container, config) {
     const catchup = reduce ? 1 : (isMobile() ? 0.32 : 0.5);
     for (let i = 0; i < NSEG; i++) {
       const s = SEGMENTS[i];
+      if (s.frameMode) {
+        if (reduce || !s.count) continue;
+        if (!s.visible && Math.abs(s.cur - s.target) < 0.002) continue;
+        s.cur += (s.target - s.cur) * (isMobile() ? 0.45 : 0.62);
+        scrubFrames(s);
+        continue;
+      }
       if (!s.hasClip || !s.ready || !s.video) continue;
       if (!s.visible && Math.abs(s.cur - s.target) < 0.002) continue;
       s.cur += (s.target - s.cur) * catchup;
@@ -424,8 +554,10 @@ function injectCSS() {
   .sw-topcta{text-decoration:none;font-weight:600;font-size:clamp(.78rem,1.4vw,.9rem);color:#fff;background:var(--sw-ink);padding:10px 18px;border-radius:999px;white-space:nowrap;flex:0 0 auto;}
   .sw-stage{position:fixed;inset:0;z-index:10;pointer-events:none;width:100vw;height:100%;height:100dvh;overflow:hidden;}
   .sw-scene{position:absolute;inset:0;opacity:0;overflow:hidden;will-change:opacity;}
-  .sw-scene__video,.sw-scene__still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;}
-  .sw-scene__still{will-change:transform;} .sw-scene.has-clip .sw-scene__still{opacity:0;}
+  .sw-scene__video,.sw-scene__still,.sw-scene__canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;}
+  .sw-scene__canvas{z-index:1;opacity:0;}
+  .sw-scene.has-frames .sw-scene__canvas{opacity:1;}
+  .sw-scene__still{will-change:transform;} .sw-scene.has-clip .sw-scene__still,.sw-scene.has-frames .sw-scene__still{opacity:0;}
   .sw-scene__video{z-index:1;will-change:contents;transform:translateZ(0);}
   .sw-copylayer{position:fixed;inset:0;z-index:20;pointer-events:none;}
   .sw-copylayer::before{content:"";position:absolute;inset:0;width:min(52vw,720px);background:linear-gradient(90deg,var(--sw-bg) 0%,color-mix(in srgb,var(--sw-bg) 78%,transparent) 34%,color-mix(in srgb,var(--sw-bg) 28%,transparent) 62%,transparent 100%);}
